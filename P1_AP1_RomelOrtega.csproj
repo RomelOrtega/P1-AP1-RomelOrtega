@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>P1-AP1-RomelOrtega</RootNamespace>
+    <RootNamespace>P1_AP1_RomelOrtega</RootNamespace>
     <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
   </PropertyGroup>
 
@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Data\" />
+    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>
