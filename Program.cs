@@ -1,10 +1,14 @@
+using Microsoft.EntityFrameworkCore;
 using P1_AP1_RomelOrtega.Components;
+using P1_AP1_RomelOrtega.DAL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+var ConStr = builder.Configuration.GetConnectionString("Sqlite");
+builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlite(ConStr));
 
 var app = builder.Build();
 
