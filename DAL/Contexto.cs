@@ -7,6 +7,6 @@ namespace P1_AP1_RomelOrtega.DAL;
     {
         public Contexto(DbContextOptions<Contexto> options) : base(options) { }
 
-        public DbSet<EntradaGuacales> Registros { get; set; }
+        public DbSet<EntradaHuacales> EntradaHuacales { get; set; }
     }
 
