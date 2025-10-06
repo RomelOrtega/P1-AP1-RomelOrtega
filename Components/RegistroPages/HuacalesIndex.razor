@@ -14,78 +14,89 @@
             <h5 class="mb-0">Consulta de Huacales</h5>
         </div>
         <div class="card-body">
-            <div class="row align-baseline-items-center mb-3">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Filtrar por:</label>
-                    <InputSelect class="form-select" @bind-Value="Filtro">
-                        <option value="IdEntrda">IDEntrada</option>
-                        <option value="Nombre">Cliente</option>
-                    </InputSelect>
-                </div>
 
-                <div class="col-md-5">
-                    <label class="form-label fw-bold">Búsqueda:</label>
-                    <div class="input-group">
-                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar..." />
-                        <button type="button" class="btn btn-primary" @onclick="Buscar">
-                            <i class="bi bi-search"></i> Buscar
-                        </button>
-                    </div>
-                </div>
+	        <div class="row mb-3">
+		        <div class="col-md-3">
+			        <label class="form-label fw-bold">Desde:</label>
+			        <InputDate @bind-Value="FechaDesde" class="form-control"/>
+		        </div>
+		        <div class="col-md-3">
+			        <label class="form-label fw-bold">Hasta:</label>
+			        <InputDate @bind-Value="FechaHasta" class="form-control"/>
+		        </div>
+	        </div>
+	        <div class="row align-baseline-items-center mb-3">
+		        <div class="col-md-3">
+			        <label class="form-label fw-bold">Filtrar por:</label>
+			        <InputSelect class="form-select" @bind-Value="Filtro">
+				        <option value="IdEntrda">IDEntrada</option>
+				        <option value="Nombre">Cliente</option>
+			        </InputSelect>
+		        </div>
 
-                <div class="col-md-4 text-end mt-4 mt-md-0">
-                    <a href="/Huacales/Create" class="btn btn-success">
-                        <i class="bi bi-plus-circle me-1"></i> Crear
-                    </a>
-                </div>
-            </div>
+		        <div class="col-md-5">
+			        <label class="form-label fw-bold">Búsqueda:</label>
+			        <div class="input-group">
+				        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar..."/>
+				        <button type="button" class="btn btn-primary" @onclick="Buscar">
+					        <i class="bi bi-search"></i> Buscar
+				        </button>
+			        </div>
+		        </div>
 
-            <table class="table table-bordered text-center align-middle" style="border-color: #dee2e6;">
-                <thead class="table-light">
-                    <tr>
-                        <th>IDEntrada</th>
-                        <th>Nombre</th>
-                        <th>Cantidad</th>
-                        <th>Precio</th>
-                        <th>Importe</th>
-                        <th>Fecha</th>
-                        <th>Editar</th>
-                        <th>Eliminar</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (ListaHuacales.Count == 0)
-                    {
-                        <tr>
-                            <td colspan="8" class="text-muted">No se encontraron Huacales.</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var Huacales in ListaHuacales)
-                        {
-                            <tr>
-                                <td>@Huacales.IdEntrada</td>
-                                <td>@Huacales.NombreCliente</td>
-                                <td>@Huacales.Cantidad.ToString("N2")</td>
-                                <td>@Huacales.Precio.ToString("N2")</td>
-                                <td>@Huacales.Importe.ToString("N2")</td>
-                                <td>@Huacales.Fecha.ToString("dd/MM/yyyy")</td>
-                                <td>
-                                    <a href="/Huacales/Edit/@Huacales.IdEntrada" class="btn btn-outline-success btn-sm">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => PrepararEliminacion(Huacales.IdEntrada)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+		        <div class="col-md-4 text-end mt-4 mt-md-0">
+			        <a href="/Huacales/Create" class="btn btn-success">
+				        <i class="bi bi-plus-circle me-1"></i> Crear
+			        </a>
+		        </div>
+	        </div>
+
+	        <table class="table table-bordered text-center align-middle" style="border-color: #dee2e6;">
+		        <thead class="table-light">
+		        <tr>
+			        <th>IDEntrada</th>
+			        <th>Nombre</th>
+			        <th>Cantidad</th>
+			        <th>Precio</th>
+			        <th>Importe</th>
+			        <th>Fecha</th>
+			        <th>Editar</th>
+			        <th>Eliminar</th>
+		        </tr>
+		        </thead>
+		        <tbody>
+		        @if (ListaHuacales.Count == 0)
+		        {
+			        <tr>
+				        <td colspan="8" class="text-muted">No se encontraron Huacales.</td>
+			        </tr>
+		        }
+		        else
+		        {
+			        @foreach (var Huacales in ListaHuacales)
+			        {
+				        <tr>
+					        <td>@Huacales.IdEntrada</td>
+					        <td>@Huacales.NombreCliente</td>
+					        <td>@Huacales.Cantidad.ToString("N2")</td>
+					        <td>@Huacales.Precio.ToString("N2")</td>
+					        <td>@Huacales.Importe.ToString("N2")</td>
+					        <td>@Huacales.Fecha.ToString("dd/MM/yyyy")</td>
+					        <td>
+						        <a href="/Huacales/Edit/@Huacales.IdEntrada" class="btn btn-outline-success btn-sm">
+							        <i class="bi bi-pencil"></i>
+						        </a>
+					        </td>
+					        <td>
+						        <button class="btn btn-outline-danger btn-sm" @onclick="() => PrepararEliminacion(Huacales.IdEntrada)">
+							        <i class="bi bi-trash"></i>
+						        </button>
+					        </td>
+				        </tr>
+			        }
+		        }
+		        </tbody>
+	        </table>
         </div>
 
         <div class="card-footer bg-white">
@@ -140,6 +151,9 @@
     public string Filtro { get; set; } = "IdEntrada";
     public string ValorFiltro { get; set; } = string.Empty;
 
+    public DateTime? FechaDesde { get; set; }
+    public DateTime? FechaHasta { get; set; }
+
     private bool MostrarModalEliminar { get; set; } = false;
     private int EntradaIdAeliminar { get; set; }
     private EntradaHuacales? HuacalesAeliminar { get; set; }
@@ -168,6 +182,15 @@
                     e.NombreCliente.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
             }
         }
+        if (FechaDesde.HasValue)
+        {
+	        lista = lista.Where(p => p.Fecha >= FechaDesde.Value).ToList();
+        }
+        if (FechaHasta.HasValue)
+        {
+	        lista = lista.Where(p => p.Fecha <= FechaHasta.Value).ToList();
+        }
+
         ListaHuacales = lista;
     }
 
