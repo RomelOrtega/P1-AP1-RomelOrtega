@@ -9,122 +9,133 @@
 
 @if (Guacales != null)
 {
-	<div class="container mt-4">
-		<div class="card shadow-sm">
-			<div class="card-header bd-white text-center">
-				<h5 class="mb-0">Editar Cliente</h5>
-			</div>
-			<div class="card-body">
-				<EditForm Model="Guacales" OnValidSubmit="GuardarCambios">
-					<DataAnnotationsValidator />
-					@if (!string.IsNullOrWhiteSpace(MensajeError))
-					{
-						<div class="alert alert-danger text-center">@MensajeError</div>
-					}
-					<div class="row">
-						<div class="col-md-6 mb-3">
-							<label for="nombre" class="form-label fw-bold">Nombre:</label>
-							<InputText id="nombre" class="form-control" @bind-Value="Guacales.NombreCliente" />
-							<ValidationMessage For="() => Guacales.NombreCliente" />
-						</div>
-						<div class="col-md-6 mb-3">
-							<label for="Precio" class="form-label fw-bold">Precio:</label>
-							<InputNumber id="Precio" class="form-control" @bind-Value="Guacales.Precio" min="0" />
-							<ValidationMessage For="() => Guacales.Precio" />
-						</div>
-						<div class="col-md-6 mb-3">
-							<label for="Cantidad" class="form-label fw-bold">Cantidad:</label>
-							<InputNumber id="Cantidad" class="form-control" @bind-Value="Guacales.Cantidad" min="0" />
-							<ValidationMessage For="() => Guacales.Cantidad" />
-						</div>
-						<div class="col-md-6 mb-3">
-							<label for="Fecha" class="form-label fw-bold">Fecha:</label>
-							<InputDate id="Fecha" class="form-control" @bind-Value="Guacales.Fecha" />
-							<ValidationMessage For="() => Guacales.Fecha" />
-						</div>
-					</div>
-					<div class="d-flex justify-content-end gap-2 mt-3">
-						<button type="submit" class="btn btn-primary">
-							<i class="bi bi-save me-1"></i> Guardar Cambios
-						</button>
-						<a href="/Huacales/Index" class="btn btn-secondary">
-							<i class="bi bi-arrow-left-circle me-1"></i> Cancelar
-						</a>
-						<button type="button" class="btn btn-danger" @onclick="() => MostrarModalEliminar = true">
-							<i class="bi bi-trash me-1"></i> Eliminar
-						</button>
-					</div>
-				</EditForm>
-			</div>
-		</div>
-	</div>
+    <div class="container mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header bd-white text-center">
+                <h5 class="mb-0">Editar Cliente</h5>
+            </div>
+            <div class="card-body">
+                <EditForm Model="Guacales" OnValidSubmit="GuardarCambios">
+                    <DataAnnotationsValidator />
+                    @if (!string.IsNullOrWhiteSpace(MensajeError))
+                    {
+                        <div class="alert alert-danger text-center">@MensajeError</div>
+                    }
+
+                    <div class="mb-3">
+                        <label for="Fecha" class="form-label fw-bold">Fecha:</label>
+                        <InputDate id="Fecha" class="form-control" @bind-Value="Guacales.Fecha" />
+                        <ValidationMessage For="() => Guacales.Fecha" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label fw-bold">Nombre:</label>
+                        <InputText id="nombre" class="form-control" @bind-Value="Guacales.NombreCliente" />
+                        <ValidationMessage For="() => Guacales.NombreCliente" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Cantidad" class="form-label fw-bold">Cantidad:</label>
+                        <InputNumber id="Cantidad" class="form-control" @bind-Value="Guacales.Cantidad" />
+                        <ValidationMessage For="() => Guacales.Cantidad" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Precio" class="form-label fw-bold">Precio:</label>
+                        <InputNumber id="Precio" class="form-control" @bind-Value="Guacales.Precio" />
+                        <ValidationMessage For="() => Guacales.Precio" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Importe" class="form-label fw-bold">Importe:</label>
+                        <input type="text" id="Importe" class="form-control" value="@Guacales.Importe.ToString("N2")" readonly />
+                    </div>
+                </EditForm>
+            </div>
+
+            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-primary" @onclick="GuardarCambios">
+                    <i class="bi bi-save me-1"></i> Guardar Cambios
+                </button>
+                <a href="/Huacales/Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Cancelar
+                </a>
+                <button type="button" class="btn btn-danger" @onclick="() => MostrarModalEliminar = true">
+                    <i class="bi bi-trash me-1"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
 }
 else
 {
-	<div class="text-center mt-5">
-		<p class="lead text-muted">Cargando datos...</p>
-	</div>
+    <div class="text-center mt-5">
+        <p class="lead text-muted">Cargando datos...</p>
+    </div>
 }
 
 @if (MostrarModalEliminar)
 {
-	<div class="card shadow-lg">
-		<div class="modal-header text-center bg-primary text-white border-bottom-0">
-			<h5 class="card-title">Eliminar Huacal</h5>
-		</div>
-		<div class="card-header text-danger">
-			<h6 class="card-title">¿Estás seguro de que deseas eliminar?</h6>
-		</div>
-		<div class="card-footer d-flex justify-content-between">
-			<button type="button" class="btn btn-secondary" @onclick="() => MostrarModalEliminar = false">
-				<i class="bi bi-arrow-left-circle me-1"></i> Volver
-			</button>
-			<button type="button" class="btn btn-outline-danger" @onclick="ConfirmarEliminacion">
-				<i class="bi bi-trash me-1"></i> Eliminar
-			</button>
+	<div class="container">
+		<div class="card shadow-lg">
+			<div class="card-header bg-primary text-white border-bottom-0">
+				<h5 class="card-title mb-0">Eliminar Huacal</h5>
+			</div>
+
+			<div class="card-body text-danger py-3">
+				<h6 class="card-title mb-0">¿Estás seguro de que deseas eliminar este huacal?</h6>
+			</div>
+			<div class="card-footer bg-white d-flex gap-2 p-3">
+				<button type="button" class="btn btn-secondary" @onclick="() => MostrarModalEliminar = false">
+					<i class="bi bi-arrow-left-circle me-1"></i> Volver
+				</button>
+				<button type="button" class="btn btn-outline-danger" @onclick="ConfirmarEliminacion">
+					<i class="bi bi-trash me-1"></i> Eliminar
+				</button>
+			</div>
 		</div>
 	</div>
 }
 
 @code {
-	[Parameter]
-	public int IdEntrada { get; set; }
-	public EntradaHuacales? Guacales { get; set; }
-	private bool MostrarModalEliminar { get; set; } = false;
-	private string MensajeError { get; set; } = string.Empty;
+    [Parameter]
+    public int IdEntrada { get; set; }
+    public EntradaHuacales? Guacales { get; set; }
+    private bool MostrarModalEliminar { get; set; } = false;
+    private string MensajeError { get; set; } = string.Empty;
 
-	protected override async Task OnInitializedAsync()
-	{
-		Guacales = await GuacalesService.Buscar(IdEntrada);
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        Guacales = await GuacalesService.Buscar(IdEntrada);
+    }
 
-	private async Task GuardarCambios()
-	{
-		if (Guacales != null)
-		{
-			if (await GuacalesService.Existe(p =>
-				p.NombreCliente.ToLower().Trim() == Guacales.NombreCliente.ToLower().Trim() &&
-				p.IdEntrada != Guacales.IdEntrada))
-			{
-				MensajeError = "Ya existe una persona con ese nombre.";
-				return;
-			}
-			if (await GuacalesService.Guardar(Guacales))
-			{
-				NavigationManager.NavigateTo("/Huacales/Index");
-			}
-		}
-	}
+    private async Task GuardarCambios()
+    {
+        if (Guacales != null)
+        {
+            if (await GuacalesService.Existe(p =>
+                p.NombreCliente.ToLower().Trim() == Guacales.NombreCliente.ToLower().Trim() &&
+                p.IdEntrada != Guacales.IdEntrada))
+            {
+                MensajeError = "Ya existe una persona con ese nombre.";
+                return;
+            }
+            if (await GuacalesService.Guardar(Guacales))
+            {
+                NavigationManager.NavigateTo("/Huacales/Index");
+            }
+        }
+    }
 
-	private async Task ConfirmarEliminacion()
-	{
-		if (Guacales != null)
-		{
-			if (await GuacalesService.Eliminar(Guacales.IdEntrada))
-			{
-				MostrarModalEliminar = false;
-				NavigationManager.NavigateTo("/Huacales/Index");
-			}
-		}
-	}
+    private async Task ConfirmarEliminacion()
+    {
+        if (Guacales != null)
+        {
+            if (await GuacalesService.Eliminar(Guacales.IdEntrada))
+            {
+                MostrarModalEliminar = false;
+                NavigationManager.NavigateTo("/Huacales/Index");
+            }
+        }
+    }
 }
