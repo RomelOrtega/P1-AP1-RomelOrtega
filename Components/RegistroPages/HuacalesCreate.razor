@@ -1,20 +1,22 @@
 ﻿@page "/Huacales/Create"
-@using P1_AP_RomelOrtega.Models
+@using P1_AP1_RomelOrtega.Models
 @using System.Linq
 @using P1_AP1_RomelOrtega.Services
+@using P1_AP1_RomelOrtega.Entensors
 @inject HuacalesService HuacalesService
 @inject NavigationManager NavigationManager
+@inject BlazorBootstrap.ToastService ToastService
 @rendermode InteractiveServer
 
 <PageTitle>Control de huacales</PageTitle>
 
 <div class="container mt-4">
     <div class="card shadow-sm">
-        <div class="card-header bd-white text-center">
+        <div class="card-header bg-white text-center">
             <h5 class="mb-0">Agregar nuevo huacal</h5>
         </div>
         <div class="card-body">
-            <EditForm Model="Huacales" OnValidSubmit="GuardarGuacal">
+            <EditForm Model="Huacales" OnValidSubmit="GuardarHuacal">
                 <DataAnnotationsValidator />
 
                 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
@@ -37,26 +39,110 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="Cantidad" class="form-label fw-bold">Cantidad:</label>
+                    <label for="Cantidad" class="form-label fw-bold">Cantidad Total:</label>
                     <InputNumber id="Cantidad" class="form-control" @bind-Value="Huacales.Cantidad" TValue="double" />
                     <ValidationMessage For="() => Huacales.Cantidad" />
                 </div>
 
                 <div class="mb-3">
-                    <label for="Precio" class="form-label fw-bold">Precio:</label>
+                    <label for="Precio" class="form-label fw-bold">Precio Total:</label>
                     <InputNumber id="Precio" class="form-control" @bind-Value="Huacales.Precio" TValue="decimal" />
                     <ValidationMessage For="() => Huacales.Precio" />
                 </div>
 
                 <div class="mb-3">
-                    <label for="Importe" class="form-label fw-bold">Importe:</label>
-                    <input type="text" id="Importe" class="form-control" value="@Huacales.Importe.ToString("N2")" readonly />
+                    <label for="Importe" class="form-label fw-bold">Importe Total:</label>
+                    <input type="text" id="Importe" class="form-control" value="@Huacales.Importe.ToString("C2")" readonly />
                 </div>
             </EditForm>
         </div>
 
+        <div class="mb-3 border p-3 border-success">
+            <h6 class="fw-bold">Agregar Detalle</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="TipoHuacal" class="form-label">Tipo de Huacal:</label>
+                    <InputSelect id="TipoHuacal" class="form-control" @bind-Value="DetalleOriginal.IdTipo">
+                        <option value="0">Seleccione un tipo</option>
+                        @if (ListaTiposHuacales != null)
+                        {
+                            @foreach (var tipo in ListaTiposHuacales)
+                            {
+                                var agregada = Huacales.EntradasHuacalesDetalles
+                                .Where(d => d.IdTipo == tipo.IdTipo)
+                                .Sum(d => d.Cantidad);
+                                var restante = tipo.Existencia - agregada;
+
+                                @if (restante > 0)
+                                {
+                                    <option value="@tipo.IdTipo">@tipo.Descripcion (Disponibles: @restante)</option>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <option value="0">Cargando tipos...</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-3">
+                    <label for="CantidadDetalle" class="form-label">Cantidad:</label>
+                    <InputNumber id="CantidadDetalle" class="form-control" @bind-Value="DetalleOriginal.Cantidad" />
+                    @if (IsNegativeQuantity)
+                    {
+                        <div class="text-danger small">La cantidad no puede ser negativa.</div>
+                    }
+                </div>
+                <div class="col-md-3">
+                    <label for="PrecioDetalle" class="form-label">Precio:</label>
+                    <InputNumber id="PrecioDetalle" class="form-control" @bind-Value="DetalleOriginal.Precio" />
+                    @if (IsNegativePrice)
+                    {
+                        <div class="text-danger small">El precio no puede ser negativo.</div>
+                    }
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-success w-100" @onclick="AgregarDetalle">
+                        <i class="bi bi-plus-circle"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (Huacales?.EntradasHuacalesDetalles?.Any() ?? false)
+        {
+            <div class="mb-3">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tipo de Huacal</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Importe</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var detalle in Huacales.EntradasHuacalesDetalles)
+                        {
+                            <tr>
+                                <td>@(ListaTiposHuacales?.FirstOrDefault(t => t.IdTipo == detalle.IdTipo)?.Descripcion ?? "Desconocido")</td>
+                                <td>@detalle.Cantidad</td>
+                                <td>@detalle.Precio.ToString("C2")</td>
+                                <td>@((detalle.Cantidad * detalle.Precio).ToString("C2"))</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoverDetalle(detalle)">
+                                        <i class="bi bi-trash"></i> Remover
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
         <div class="card-footer bg-white d-flex justify-content-end gap-2">
-            <button type="submit" class="btn btn-primary" @onclick="GuardarGuacal">
+            <button type="submit" class="btn btn-primary" @onclick="GuardarHuacal">
                 <i class="bi bi-save me-1"></i> Guardar
             </button>
             <a href="/Huacales/Index" class="btn btn-secondary">
@@ -67,19 +153,161 @@
 </div>
 
 @code {
-    public EntradaHuacales Huacales { get; set; } = new();
+    public EntradaHuacales Huacales { get; set; } = new()
+    {
+        Fecha = DateTime.Now,
+        EntradasHuacalesDetalles = new List<EntradasHuacalesDetalle>()
+    };
+    public EntradasHuacalesDetalle DetalleOriginal { get; set; } = new();
+    private EntradasHuacalesDetalle DetalleOriginalAnterior { get; set; } = new();
+    public List<TiposHuacales> ListaTiposHuacales { get; set; } = new();
     public string ErrorMessage { get; set; } = string.Empty;
 
-    private async Task GuardarGuacal()
+    private bool IsNegativeQuantity { get; set; }
+    private bool IsNegativePrice { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ListaTiposHuacales = await HuacalesService.ListarTiposHuacales() ?? new List<TiposHuacales>();
+            if (!ListaTiposHuacales.Any())
+            {
+                Console.WriteLine("No se cargaron tipos de huacales.");
+            }
+            ActualizarTotales();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar tipos: {ex.Message}");
+            ErrorMessage = "Error al cargar los tipos de huacal.";
+        }
+    }
+
+    private void AgregarDetalle()
+    {
+        ErrorMessage = string.Empty;
+        IsNegativeQuantity = DetalleOriginal.Cantidad < 0;
+        IsNegativePrice = DetalleOriginal.Precio < 0;
+
+        if (DetalleOriginal.IdTipo <= 0)
+        {
+            ErrorMessage = "Debe seleccionar un tipo de huacal.";
+            ToastService.ShowError(ErrorMessage);
+            return;
+        }
+
+        if (IsNegativeQuantity || IsNegativePrice)
+        {
+            return;
+        }
+
+        if (DetalleOriginal.Cantidad <= 0)
+        {
+            ErrorMessage = "La cantidad debe ser mayor a cero.";
+            ToastService.ShowError(ErrorMessage);
+            return;
+        }
+
+        if (DetalleOriginal.Precio <= 0)
+        {
+            ErrorMessage = "El precio debe ser mayor a cero.";
+            ToastService.ShowError(ErrorMessage);
+            return;
+        }
+
+        var tipoSeleccionado = ListaTiposHuacales.FirstOrDefault(t => t.IdTipo == DetalleOriginal.IdTipo);
+        if (tipoSeleccionado == null)
+        {
+            ErrorMessage = "Tipo de huacal no encontrado.";
+            ToastService.ShowError(ErrorMessage);
+            return;
+        }
+
+        var cantidadAgregada = Huacales.EntradasHuacalesDetalles
+            .Where(d => d.IdTipo == DetalleOriginal.IdTipo)
+            .Sum(d => d.Cantidad);
+
+        var disponible = tipoSeleccionado.Existencia - cantidadAgregada;
+
+        if (DetalleOriginal.Cantidad > disponible)
+        {
+            ErrorMessage = $"No hay suficiente existencia. Disponible: {disponible}";
+            ToastService.ShowError(ErrorMessage);
+            return;
+        }
+
+        DetalleOriginalAnterior = new EntradasHuacalesDetalle
+        {
+            IdTipo = DetalleOriginal.IdTipo,
+            Cantidad = DetalleOriginal.Cantidad,
+            Precio = DetalleOriginal.Precio
+        };
+
+        Huacales.EntradasHuacalesDetalles.Add(new EntradasHuacalesDetalle
+        {
+            IdTipo = DetalleOriginal.IdTipo,
+            Cantidad = DetalleOriginal.Cantidad,
+            Precio = DetalleOriginal.Precio
+        });
+
+        DetalleOriginal = new EntradasHuacalesDetalle();
+        IsNegativeQuantity = false;
+        IsNegativePrice = false;
+        ActualizarTotales();
+        ToastService.ShowSuccess("Detalle agregado correctamente");
+        StateHasChanged();
+    }
+
+    private void RemoverDetalle(EntradasHuacalesDetalle detalle)
+    {
+        Huacales.EntradasHuacalesDetalles.Remove(detalle);
+
+        DetalleOriginal = new EntradasHuacalesDetalle
+        {
+            IdTipo = DetalleOriginalAnterior.IdTipo,
+            Cantidad = DetalleOriginalAnterior.Cantidad,
+            Precio = DetalleOriginalAnterior.Precio
+        };
+
+        IsNegativeQuantity = DetalleOriginal.Cantidad < 0;
+        IsNegativePrice = DetalleOriginal.Precio < 0;
+        ActualizarTotales();
+        StateHasChanged();
+    }
+
+    private void ActualizarTotales()
+    {
+        Huacales.Cantidad = Huacales.EntradasHuacalesDetalles.Sum(d => d.Cantidad);
+        Huacales.Precio = Huacales.EntradasHuacalesDetalles.Any() ? Huacales.EntradasHuacalesDetalles.Average(d => d.Precio) : Huacales.Precio;
+        StateHasChanged();
+    }
+
+    private async Task GuardarHuacal()
     {
         if (await HuacalesService.Existe(e => e.NombreCliente.ToLower().Trim() == Huacales.NombreCliente.ToLower().Trim()))
         {
             ErrorMessage = "Este nombre ya ha sido agregado.";
+            ToastService.ShowError(ErrorMessage);
             return;
         }
+
+        if (!Huacales.EntradasHuacalesDetalles.Any())
+        {
+            ErrorMessage = "Debe agregar al menos un detalle antes de guardar.";
+            ToastService.ShowError(ErrorMessage);
+            return;
+        }
+
         if (await HuacalesService.Guardar(Huacales))
         {
+            ToastService.ShowSuccess("Huacal guardado correctamente");
             NavigationManager.NavigateTo("/Huacales/Index");
+        }
+        else
+        {
+            ErrorMessage = "Error al guardar.";
+            ToastService.ShowError(ErrorMessage);
         }
     }
 }

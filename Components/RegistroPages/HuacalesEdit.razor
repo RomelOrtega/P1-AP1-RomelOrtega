@@ -1,8 +1,9 @@
 ﻿@page "/Huacales/Edit/{IdEntrada:int}"
-@using P1_AP_RomelOrtega.Models
 @using P1_AP1_RomelOrtega.Services
-@inject HuacalesService GuacalesService
+@using P1_AP1_RomelOrtega.Entensors
+@inject HuacalesService HuacalesService
 @inject NavigationManager NavigationManager
+@inject BlazorBootstrap.ToastService ToastService
 @rendermode InteractiveServer
 
 <PageTitle>Editar Huacales</PageTitle>
@@ -11,7 +12,7 @@
 {
     <div class="container mt-4">
         <div class="card shadow-sm">
-            <div class="card-header bd-white text-center">
+            <div class="card-header bg-white text-center">
                 <h5 class="mb-0">Editar Cliente</h5>
             </div>
             <div class="card-body">
@@ -36,13 +37,13 @@
 
                     <div class="mb-3">
                         <label for="Cantidad" class="form-label fw-bold">Cantidad:</label>
-                        <InputNumber id="Cantidad" class="form-control" @bind-Value="Guacales.Cantidad" />
+                        <InputNumber id="Cantidad" class="form-control" @bind-Value="Guacales.Cantidad" TValue="double" />
                         <ValidationMessage For="() => Guacales.Cantidad" />
                     </div>
 
                     <div class="mb-3">
                         <label for="Precio" class="form-label fw-bold">Precio:</label>
-                        <InputNumber id="Precio" class="form-control" @bind-Value="Guacales.Precio" />
+                        <InputNumber id="Precio" class="form-control" @bind-Value="Guacales.Precio" TValue="decimal" />
                         <ValidationMessage For="() => Guacales.Precio" />
                     </div>
 
@@ -52,6 +53,81 @@
                     </div>
                 </EditForm>
             </div>
+
+            <div class="mb-3 border p-3 border-success">
+                <h6 class="fw-bold">Agregar Detalle de Huacal</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="TipoHuacal" class="form-label">Tipo de Huacal:</label>
+                        <InputSelect id="TipoHuacal" class="form-control" @bind-Value="DetalleActual.IdTipo" TValue="int">
+                            <option value="0">Seleccione un tipo</option>
+                            @foreach (var tipo in ListaTiposHuacales)
+                            {
+                                var agregada = Guacales.EntradasHuacalesDetalles
+                                .Where(d => d.IdTipo == tipo.IdTipo)
+                                .Sum(d => d.Cantidad);
+
+                                var cantidadOriginal = DetallesOriginales
+                                .Where(d => d.IdTipo == tipo.IdTipo)
+                                .Sum(d => d.Cantidad);
+
+                                var restante = tipo.Existencia + cantidadOriginal - agregada;
+
+                                @if (restante > 0)
+                                {
+                                    <option value="@tipo.IdTipo">@tipo.Descripcion (Disponibles: @restante)</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="CantidadDetalle" class="form-label">Cantidad:</label>
+                        <InputNumber id="CantidadDetalle" class="form-control" @bind-Value="DetalleActual.Cantidad" TValue="int" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="PrecioDetalle" class="form-label">Precio:</label>
+                        <InputNumber id="PrecioDetalle" class="form-control" @bind-Value="DetalleActual.Precio" TValue="decimal" />
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-success w-100" @onclick="AgregarDetalle">
+                            <i class="bi bi-plus-circle"></i> Agregar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (Guacales.EntradasHuacalesDetalles.Any())
+            {
+                <div class="mb-3">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo de Huacal</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Importe</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detalle in Guacales.EntradasHuacalesDetalles)
+                            {
+                                <tr>
+                                    <td>@ListaTiposHuacales.FirstOrDefault(t => t.IdTipo == detalle.IdTipo)?.Descripcion</td>
+                                    <td>@detalle.Cantidad</td>
+                                    <td>@detalle.Precio.ToString("C2")</td>
+                                    <td>@((detalle.Cantidad * detalle.Precio).ToString("C2"))</td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoverDetalle(detalle)">
+                                            <i class="bi bi-trash"></i> Remover
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
 
             <div class="card-footer bg-white d-flex justify-content-end gap-2">
                 <button type="submit" class="btn btn-primary" @onclick="GuardarCambios">
@@ -76,53 +152,178 @@ else
 
 @if (MostrarModalEliminar)
 {
-	<div class="container">
-		<div class="card shadow-lg">
-			<div class="card-header bg-primary text-white border-bottom-0">
-				<h5 class="card-title mb-0">Eliminar Huacal</h5>
-			</div>
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white border-bottom-0">
+                <h5 class="card-title mb-0">Eliminar Huacal</h5>
+            </div>
 
-			<div class="card-body text-danger py-3">
-				<h6 class="card-title mb-0">¿Estás seguro de que deseas eliminar este huacal?</h6>
-			</div>
-			<div class="card-footer bg-white d-flex gap-2 p-3">
-				<button type="button" class="btn btn-secondary" @onclick="() => MostrarModalEliminar = false">
-					<i class="bi bi-arrow-left-circle me-1"></i> Volver
-				</button>
-				<button type="button" class="btn btn-outline-danger" @onclick="ConfirmarEliminacion">
-					<i class="bi bi-trash me-1"></i> Eliminar
-				</button>
-			</div>
-		</div>
-	</div>
+            <div class="card-body text-danger py-3">
+                <h6 class="card-title mb-0">¿Estás seguro de que deseas eliminar este huacal?</h6>
+            </div>
+            <div class="card-footer bg-white d-flex gap-2 p-3">
+                <button type="button" class="btn btn-secondary" @onclick="() => MostrarModalEliminar = false">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Volver
+                </button>
+                <button type="button" class="btn btn-outline-danger" @onclick="ConfirmarEliminacion">
+                    <i class="bi bi-trash me-1"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
 }
 
 @code {
     [Parameter]
     public int IdEntrada { get; set; }
     public EntradaHuacales? Guacales { get; set; }
+    public EntradasHuacalesDetalle DetalleActual { get; set; } = new();
+    private EntradasHuacalesDetalle DetalleOriginalAnterior { get; set; } = new();
+    public List<TiposHuacales> ListaTiposHuacales { get; set; } = new();
     private bool MostrarModalEliminar { get; set; } = false;
     private string MensajeError { get; set; } = string.Empty;
+    private List<EntradasHuacalesDetalle> DetallesOriginales { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        Guacales = await GuacalesService.Buscar(IdEntrada);
+        ListaTiposHuacales = await HuacalesService.ListarTiposHuacales();
+        Guacales = await HuacalesService.Buscar(IdEntrada);
+
+        if (Guacales == null)
+        {
+            MensajeError = "Entrada no encontrada.";
+        }
+        else
+        {
+            DetallesOriginales = Guacales.EntradasHuacalesDetalles
+                .Select(d => new EntradasHuacalesDetalle
+                {
+                    IdTipo = d.IdTipo,
+                    Cantidad = d.Cantidad,
+                    Precio = d.Precio
+                }).ToList();
+        }
+    }
+
+    private void AgregarDetalle()
+    {
+        MensajeError = string.Empty;
+
+        if (DetalleActual.IdTipo <= 0)
+        {
+            MensajeError = "Debe seleccionar un tipo de huacal.";
+            ToastService.ShowError(MensajeError);
+            return;
+        }
+
+        if (DetalleActual.Cantidad <= 0)
+        {
+            MensajeError = "La cantidad debe ser mayor a cero.";
+            ToastService.ShowError(MensajeError);
+            return;
+        }
+
+        if (DetalleActual.Precio <= 0)
+        {
+            MensajeError = "El precio debe ser mayor a cero.";
+            ToastService.ShowError(MensajeError);
+            return;
+        }
+
+        if (Guacales != null)
+        {
+            var tipoSeleccionado = ListaTiposHuacales.FirstOrDefault(t => t.IdTipo == DetalleActual.IdTipo);
+            if (tipoSeleccionado == null)
+            {
+                MensajeError = "Tipo de huacal no encontrado.";
+                ToastService.ShowError(MensajeError);
+                return;
+            }
+
+            var cantidadAgregada = Guacales.EntradasHuacalesDetalles
+                .Where(d => d.IdTipo == DetalleActual.IdTipo)
+                .Sum(d => d.Cantidad);
+
+            var cantidadOriginal = DetallesOriginales
+                .Where(d => d.IdTipo == DetalleActual.IdTipo)
+                .Sum(d => d.Cantidad);
+
+            var disponible = tipoSeleccionado.Existencia + cantidadOriginal - cantidadAgregada;
+
+            if (DetalleActual.Cantidad > disponible)
+            {
+                MensajeError = $"No hay suficiente existencia. Disponible: {disponible}";
+                ToastService.ShowError(MensajeError);
+                return;
+            }
+
+            DetalleOriginalAnterior = new EntradasHuacalesDetalle
+            {
+                IdTipo = DetalleActual.IdTipo,
+                Cantidad = DetalleActual.Cantidad,
+                Precio = DetalleActual.Precio
+            };
+
+            Guacales.EntradasHuacalesDetalles.Add(new EntradasHuacalesDetalle
+            {
+                IdTipo = DetalleActual.IdTipo,
+                Cantidad = DetalleActual.Cantidad,
+                Precio = DetalleActual.Precio,
+                IdEntrada = Guacales.IdEntrada
+            });
+
+            ToastService.ShowSuccess("Detalle agregado correctamente");
+        }
+
+        DetalleActual = new EntradasHuacalesDetalle();
+        StateHasChanged();
+    }
+
+    private void RemoverDetalle(EntradasHuacalesDetalle detalle)
+    {
+        if (Guacales != null)
+        {
+            Guacales.EntradasHuacalesDetalles.Remove(detalle);
+
+            DetalleActual = new EntradasHuacalesDetalle
+            {
+                IdTipo = DetalleOriginalAnterior.IdTipo,
+                Cantidad = DetalleOriginalAnterior.Cantidad,
+                Precio = DetalleOriginalAnterior.Precio
+            };
+        }
+        StateHasChanged();
     }
 
     private async Task GuardarCambios()
     {
         if (Guacales != null)
         {
-            if (await GuacalesService.Existe(p =>
+            if (!Guacales.EntradasHuacalesDetalles.Any())
+            {
+                MensajeError = "Debe agregar al menos un detalle antes de guardar.";
+                ToastService.ShowError(MensajeError);
+                return;
+            }
+
+            if (await HuacalesService.Existe(p =>
                 p.NombreCliente.ToLower().Trim() == Guacales.NombreCliente.ToLower().Trim() &&
                 p.IdEntrada != Guacales.IdEntrada))
             {
-                MensajeError = "Ya existe una persona con ese nombre.";
+                MensajeError = "Ya existe un cliente con ese nombre.";
+                ToastService.ShowError(MensajeError);
                 return;
             }
-            if (await GuacalesService.Guardar(Guacales))
+
+            if (await HuacalesService.Guardar(Guacales))
             {
+                ToastService.ShowSuccess("Cambios guardados correctamente");
                 NavigationManager.NavigateTo("/Huacales/Index");
+            }
+            else
+            {
+                MensajeError = "Ocurrió un error al guardar los cambios.";
+                ToastService.ShowError(MensajeError);
             }
         }
     }
@@ -131,10 +332,16 @@ else
     {
         if (Guacales != null)
         {
-            if (await GuacalesService.Eliminar(Guacales.IdEntrada))
+            if (await HuacalesService.Eliminar(Guacales.IdEntrada))
             {
                 MostrarModalEliminar = false;
+                ToastService.ShowSuccess("Huacal eliminado correctamente");
                 NavigationManager.NavigateTo("/Huacales/Index");
+            }
+            else
+            {
+                MensajeError = "Ocurrió un error al eliminar el huacal.";
+                ToastService.ShowError(MensajeError);
             }
         }
     }
