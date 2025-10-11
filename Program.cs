@@ -11,6 +11,7 @@ builder.Services.AddRazorComponents()
 var ConStr = builder.Configuration.GetConnectionString("Sqlite");
 builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlite(ConStr));
 builder.Services.AddScoped<HuacalesService>();
+builder.Services.AddBlazorBootstrap();
 
 var app = builder.Build();
 
